@@ -35,17 +35,29 @@ body {
 }
 
 .card-box {
+  width: 755px;
   align-items: center;
   display: flex;
   justify-content: space-between;
   gap: 10px;
 }
 
+.card-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background-color: hsl(34, 57%, 70%);
+  z-index: 3;
+  transition: opacity .1s ease-out;
+}
+
 .card {
   display: block;
   position: relative;
   text-align: center;
-  height: 200px;
+  min-height: 150px;
   background-color: hsl(34, 57%, 70%);
 }
 
@@ -73,12 +85,32 @@ body {
   background-color: rgb(99, 195, 91);
 }
 
+.card-done {
+  background-color: rgb(99, 195, 91);
+}
+
+.card-wrong {
+  background-color: rgb(215, 6, 6);
+}
+
+.card-active .card-close {
+  opacity: 0;
+}
+
+.card-done .card-close {
+  opacity: 0;
+}
+
+.timer {
+  font-size: 30px;
+}
+
 @media (max-width: 800px) {
   .card-box {
     width: 100%;
   }
 
   .card {
-    width: 45%;
+    min-height: 70px;
   }
 }
