@@ -11,6 +11,14 @@ const images = [
   './img/dog9.png',
 ]
 
+//timer interval 
+let timerInterval = null
+
+//func for get set info to local storage
+function saveDataToLocalStorage(key, objArr) {
+  localStorage.setItem(key, JSON.stringify(objArr))
+}
+
 //function create div 
 function createDiv(className) {
   let div = document.createElement('div')
@@ -42,7 +50,7 @@ function createList(className) {
   return ul
 }
 
-// Этап 1. Создайте функцию, генерирующую массив парных чисел. Пример массива, который должна возвратить функция: [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8].count - количество пар.
+// 1. Создайте функцию, генерирующую массив парных чисел. Пример массива, который должна возвратить функция: [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8].count - количество пар.
 
 function createNumbersArray(count) {
   const numbers = Array.from({ length: 9 }, (_, index) => index + 1); // Создаем массив чисел от 1 до 9
@@ -59,7 +67,7 @@ function createNumbersArray(count) {
 
 }
 
-// Этап 2. Создайте функцию перемешивания массива.Функция принимает в аргументе исходный массив и возвращает перемешанный массив. arr - массив чисел
+// 2. Создайте функцию перемешивания массива.Функция принимает в аргументе исходный массив и возвращает перемешанный массив. arr - массив чисел
 
 function shuffleNumbers(arr) {
   let currentIndex = arr.length //current index 
@@ -74,7 +82,7 @@ function shuffleNumbers(arr) {
   return arr
 }
 
-// Этап 3. Используйте две созданные функции для создания массива перемешанными номерами. На основе этого массива вы можете создать DOM-элементы карточек. У каждой карточки будет свой номер из массива произвольных чисел. Вы также можете создать для этого специальную функцию. count - количество пар.
+// 3. Используйте две созданные функции для создания массива перемешанными номерами. На основе этого массива вы можете создать DOM-элементы карточек. У каждой карточки будет свой номер из массива произвольных чисел. Вы также можете создать для этого специальную функцию. count - количество пар.
 
 function createNewANumbersArr(count) {
   const shuffleNumbersArr = createNumbersArray(count);
@@ -88,33 +96,151 @@ function createNewANumbersArr(count) {
   return shuffleNumbers(numbersWithImages); // Перемешиваем массив с числами и изображениями
 }
 
+//Func create the conditions of the click
+function conditionOfClick(card) {
+
+  if (card.classList.contains('card-done')) {
+    return; // if card contain class card-done, stop
+  }
+
+  if (!card.classList.contains('card-active')) {
+    card.classList.add('card-active'); //toggle class name to cards
+  } else {
+    card.classList.remove('card-active');
+  } //add new class name to cards
+
+  const activeCards = document.querySelectorAll('.card-active') //get array of active cards
+
+  if (activeCards.length === 2) {
+    const activeNumbers = Array.from(activeCards).map(card => Number(card.querySelector('.card__number').textContent))
+
+    if (activeNumbers[0] === activeNumbers[1]) { //compare active cards number
+      activeCards.forEach(card => {
+        card.classList.remove('card-active')
+        card.classList.add('card-done')
+      })
+    } else {
+      activeCards.forEach(card => {
+        card.classList.add('card-wrong'); // Add class for wrong pairs
+      });
+
+      setTimeout(() => { // Set timeout to remove 'card-wrong' class after 500ms
+        activeCards.forEach(card => {
+          card.classList.remove('card-active', 'card-wrong')
+        });
+      }, 500);
+    }
+  }
+}
+
+//Func check all pairs found 
+function checkAllPairsFound() {
+  const totalPairs = document.querySelectorAll('.card') // get amount of cards
+  const foundPairs = document.querySelectorAll('.card-done') // get amount of found cards
+
+  if (foundPairs.length === totalPairs.length) {
+    alert('Game Over!');
+    totalPairs.forEach(card => {
+      card.classList.remove('card-active', 'card-done')
+      updateTimer() //stop timer
+    });
+  }
+}
+
 //Func create dom-element to card of game 
-function createCardOfGame(text,img) {
+function createCardOfGame(cardContent, userName) {
+
+  //to get empty object at local storage
+  const data = localStorage.getItem(userName)
+
+  //if array not empty to do parse
+  if (data !== "" && data !== null) {
+    cardContent = JSON.parse(data)
+  }
+
+  const cardClose = createDiv('card-close') //create div for card close
+
   const card = document.createElement('li') //create li
   card.classList.add('card')
   card.classList.add('col-3')
 
-  card.addEventListener('click', () => { 
-   card.classList.toggle('card-active')
+  card.addEventListener('click', () => {
+    if (!card.classList.contains('card-active')) {
+      conditionOfClick(card); // call func with conditions of game
+    }
+    checkAllPairsFound() //call func for checking all found
   })
 
   let image = document.createElement('img'); // create img
   image.classList.add('card__image');
-  image.src = img; // src to img
-  
-  let number = createParagraph('card__number', text) //create p 
+  image.src = cardContent.image; // src to img
 
-  card.append(image, number) //add p to li
+  let number = createParagraph('card__number', cardContent.number) //create p 
+
+  card.append(cardClose, image, number) //add p to li
 
   return card
 }
 
+//Func create timer 
+function createTimer() {
+  const timeBox = createDiv('timer-box') //timer wrapper
+
+  let time = createParagraph('timer') //timer
+  time.id = 'timer' //set id
+  time.textContent = '00:00' //add text content
+
+  timeBox.append(time)
+  container.append(timeBox)
+}
+
 //Func to start game
 function startGame(arr) {
-  for(i = 0; i < arr.length; i++) {
-    let createCard = createCardOfGame(arr[i].number, arr[i].image)
+  cardBox.innerHTML = ''
+  clearInterval(timerInterval) // cleaned timer
+
+  for (i = 0; i < arr.length; i++) {
+    let createCard = createCardOfGame(arr[i])
     cardBox.append(createCard)
   }
+
+  saveDataToLocalStorage('newUser', arr)
+  container.append(cardBox)
+}
+
+//Func update time 
+function updateTimer() {
+  const timerElement = document.getElementById('timer')
+
+  // Если timerInterval уже установлен и не равен null, очищаем его перед созданием нового интервала
+  if (timerInterval !== null) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+
+  let seconds = 0 // Объявляем переменную seconds здесь, чтобы она обнулялась при каждом запуске таймера
+
+
+  timerInterval = setInterval(() => {
+    const minutes = Math.floor(seconds / 60);
+    const remainderSeconds = seconds % 60;
+    const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const displaySeconds = remainderSeconds < 10 ? `0${remainderSeconds}` : remainderSeconds;
+
+    timerElement.textContent = `${displayMinutes}:${displaySeconds}`;
+    seconds++; // Увеличиваем количество секунд
+
+     // Через 60 секунд останавливаем таймер
+   if (seconds >= 60) {
+    clearInterval(timerInterval)
+    timerInterval = null
+    alert('Time is over!')
+
+    updateTimer()
+  } 
+
+  }, 1000)
+
 }
 
 
@@ -122,7 +248,15 @@ const container = createDiv('container') //container
 const title = createTitle('title', 'Pair Game') //title
 const cardBox = createList('card-box') //ul element for cards
 
+container.append(title) //add title to container
+
+const timer = createTimer() //create timer
+
 startGame(createNewANumbersArr(16)) //call func start game
 
-container.append(title, cardBox) //add title to container
 document.body.append(container) //add container to body
+
+updateTimer() //update timer
+
+// Call startGame function when the page loads
+window.startGame = startGame
