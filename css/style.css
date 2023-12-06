@@ -34,12 +34,69 @@ body {
   padding: 0 20px;
 }
 
+.title {
+  margin-bottom: 30px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-input {
+  outline: none;
+  width: 300px;
+  margin-bottom: 15px;
+  background-color: rgba(222, 184, 135, 0.5);
+}
+
+.start-game-btn {
+  width: 300px;
+  padding: 10px 35px;
+  font-size: 25px;
+  border-radius: 10px;
+  background-color: hsl(34, 57%, 70%);
+  color: #000000;
+  border: 2px solid rgb(42, 41, 41);
+  cursor: pointer;
+}
+
+.start-game-btn:focus {
+  outline: none;
+}
+
+.start-game-btn:hover {
+  background-color: hsl(34, 74%, 34%);
+  color: rgb(255, 255, 255);
+  border: 2px solid rgb(255, 255, 255);
+}
+
+.start-game-btn:active {
+  outline: none;
+  background-color: hsl(12, 74%, 34%);
+  color: rgb(255, 255, 255);
+  border: 2px solid rgb(78, 6, 6);
+}
+
+.game-over-btn {
+  outline: none;
+  background-color: rgb(180, 1, 1);
+  color: rgb(255, 255, 255);
+}
+
 .card-box {
   width: 755px;
   align-items: center;
   display: flex;
-  justify-content: space-between;
   gap: 10px;
+  transform: translate(10px, -1000px);
+  transition: transform 1s ease-in-out;
+}
+
+.card-box__game-start {
+  transform: translate(10px, 10px);
 }
 
 .card-close {
