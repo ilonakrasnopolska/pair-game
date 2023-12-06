@@ -1,3 +1,10 @@
+
+const container = createDiv('container') //container
+const title = createTitle('title', 'Pair Game') //title
+const form = document.createElement('form') //form
+const button = createButton('start-game-btn', 'Start Game') //button
+const cardBox = createList('card-box') //ul element for cards
+
 //array of picture
 const images = [
   './img/dog1.png',
@@ -40,6 +47,14 @@ function createParagraph(className, text) {
   paragraph.classList.add(className)
   paragraph.textContent = text
   return paragraph
+}
+
+//Func create button 
+function createButton(className, text) {
+  let btn = document.createElement('button')
+  btn.classList.add(className)
+  btn.textContent = text
+  return btn
 }
 
 //function create ul
@@ -96,7 +111,7 @@ function createNewANumbersArr(count) {
   return shuffleNumbers(numbersWithImages); // Перемешиваем массив с числами и изображениями
 }
 
-//Func create the conditions of the click
+//Func create the conditions of the click of card
 function conditionOfClick(card) {
 
   if (card.classList.contains('card-done')) {
@@ -138,13 +153,74 @@ function checkAllPairsFound() {
   const totalPairs = document.querySelectorAll('.card') // get amount of cards
   const foundPairs = document.querySelectorAll('.card-done') // get amount of found cards
 
-  if (foundPairs.length === totalPairs.length) {
-    alert('Game Over!');
-    totalPairs.forEach(card => {
-      card.classList.remove('card-active', 'card-done')
-      updateTimer() //stop timer
-    });
+  if (foundPairs.length === totalPairs.length) { //if found all cards
+    setTimeout(() => { //timer
+      alert('Congratulations! You found all pairs!')
+      button.textContent = 'Congratulations!'
+
+      clearInterval(timerInterval) // cleaned timer
+      cardBox.classList.remove('card-box__game-start') //remove class name to ul with cards of game
+      totalPairs.forEach(card => {
+        card.classList.remove('card-done')
+      });
+    }, 1000)
+
+    setTimeout(() => { //back to origin button - start game
+
+      button.textContent = 'Start Game'
+      button.disabled = false
+
+    }, 5000)
   }
+}
+
+//Func create timer 
+function createTimer() {
+  const timeBox = createDiv('timer-box') //timer wrapper
+
+  let time = createParagraph('timer') //timer
+  time.id = 'timer' //set id
+  time.textContent = '00:00' //add text content
+
+  timeBox.append(time)
+  container.append(timeBox)
+}
+
+//Func update time 
+function updateTimer() {
+  const timerElement = document.getElementById('timer');
+  let seconds = -1;
+
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    seconds++;
+    if (seconds <= 60) {
+      const displayMinutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const displaySeconds = String(seconds % 60).padStart(2, '0');
+      timerElement.textContent = `${displayMinutes}:${displaySeconds}`;
+
+      button.textContent = 'You have 1 minute'
+      button.disabled = true
+
+    } else {
+      clearInterval(timerInterval);
+      alert('Time is over!');
+      timerElement.textContent = '00:00'
+      cardBox.classList.remove('card-box__game-start') //remove class name to ul with cards of game
+
+      button.textContent = 'Game Over'
+      button.classList.add('game-over-btn')
+      button.disabled = false
+
+      setTimeout(() => {
+        button.textContent = 'Start Game'
+        button.classList.remove('game-over-btn')
+      }, 2000)
+
+    }
+  }, 1000);
+
 }
 
 //Func create dom-element to card of game 
@@ -182,16 +258,40 @@ function createCardOfGame(cardContent, userName) {
   return card
 }
 
-//Func create timer 
-function createTimer() {
-  const timeBox = createDiv('timer-box') //timer wrapper
+function createGameMenu() {
 
-  let time = createParagraph('timer') //timer
-  time.id = 'timer' //set id
-  time.textContent = '00:00' //add text content
+  form.classList.add('form') //add class name to form
+  form.id = 'gameSettings' //set id
 
-  timeBox.append(time)
-  container.append(timeBox)
+  const input = document.createElement('input') //create input
+  input.type = 'number'
+  input.placeholder = 'Enter amount of cards'
+  input.classList.add('form-input')
+
+  input.min = '2'; // min
+  input.max = '16'; // max
+
+
+  form.addEventListener('submit', (event) => {
+  
+    event.preventDefault(); // Предотвращение действия по умолчанию при отправке формы
+
+    const inputValue = parseInt(input.value); // Получение значения из поля ввода
+
+    if (inputValue >= 2 && inputValue <= 16 && inputValue % 2 === 0) { // Проверка введённых данных
+      startGame(createNewANumbersArr(inputValue)); // Запуск игры с указанным количеством карточек
+      updateTimer(); // Обновление таймера
+      cardBox.classList.add('card-box__game-start'); // Добавление класса для начала игры
+      input.value = ''
+    } else {
+      alert('Please enter an even number between 2 and 16.'); // Предупреждение об ошибке ввода данных
+    }
+
+  })
+
+  form.append(input, button)
+
+  container.append(form)
 }
 
 //Func to start game
@@ -208,55 +308,19 @@ function startGame(arr) {
   container.append(cardBox)
 }
 
-//Func update time 
-function updateTimer() {
-  const timerElement = document.getElementById('timer')
 
-  // Если timerInterval уже установлен и не равен null, очищаем его перед созданием нового интервала
-  if (timerInterval !== null) {
-    clearInterval(timerInterval)
-    timerInterval = null
-  }
-
-  let seconds = 0 // Объявляем переменную seconds здесь, чтобы она обнулялась при каждом запуске таймера
-
-
-  timerInterval = setInterval(() => {
-    const minutes = Math.floor(seconds / 60);
-    const remainderSeconds = seconds % 60;
-    const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    const displaySeconds = remainderSeconds < 10 ? `0${remainderSeconds}` : remainderSeconds;
-
-    timerElement.textContent = `${displayMinutes}:${displaySeconds}`;
-    seconds++; // Увеличиваем количество секунд
-
-     // Через 60 секунд останавливаем таймер
-   if (seconds >= 60) {
-    clearInterval(timerInterval)
-    timerInterval = null
-    alert('Time is over!')
-
-    updateTimer()
-  } 
-
-  }, 1000)
-
-}
-
-
-const container = createDiv('container') //container
-const title = createTitle('title', 'Pair Game') //title
-const cardBox = createList('card-box') //ul element for cards
 
 container.append(title) //add title to container
 
+createGameMenu() //call form - game menu
+
 const timer = createTimer() //create timer
 
-startGame(createNewANumbersArr(16)) //call func start game
+
+// startGame(createNewANumbersArr(16)) //call func start game
+
 
 document.body.append(container) //add container to body
-
-updateTimer() //update timer
 
 // Call startGame function when the page loads
 window.startGame = startGame
